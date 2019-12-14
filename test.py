@@ -1,27 +1,18 @@
 import tensorflow as tf
-from tensorflow import keras
 import matplotlib.pyplot as plt
 import os
 import IPython.display as display
 import pandas as pd
 from math import log
+import csv
 import numpy as np
 import pathlib
 
 # https://analyticsindiamag.com/multi-label-image-classification-with-tensorflow-keras/
 # https://www.tensorflow.org/tutorials/images/cnn
-#
+
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-
-'''
-The Functional API is a way to create models that is more flexible than Sequential: 
-it can handle models with non-linear topology, 
-models with shared layers, 
-and models with multiple inputs or outputs.
-It's based on the idea that a deep learning model is usually a directed acyclic graph (DAG) of layers.
-The Functional API a set of tools for building graphs of layers.
-'''
 
 '''
 PREPROCESSING DATA
@@ -67,6 +58,24 @@ VASC_str = training_set.VASC.astype(str)
 
 training_set['prediction'] = MEL_str + NV_str + BCC_str + AKIEC_str + BKL_str + DF_str + VASC_str
 
+# creating a test csv with test filenames
+with open('D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/test_set.csv', 'w', newline='') as writeFile:
+    data = []
+    writer = csv.writer(writeFile)
+    data.append('Images')
+    writer.writerow(data)
+    data = []
+    for filename in os.listdir('D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/images'):
+        data.append(filename)
+        writer.writerow(data)
+        data = []
+writeFile.close()
+
+test_set = pd.read_csv("D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/test_set.csv")
+test_imgs = ["D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/images/{}.jpg".format(x) for x in
+             list(test_set.id)]
+test_set = pd.DataFrame({'Images': test_imgs})
+
 BATCH_SIZE = 32
 IMG_HEIGHT = 600
 IMG_WIDTH = 450
@@ -97,9 +106,29 @@ model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 
 model.add(tf.keras.layers.Flatten())  # flatten the output into vector
 model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dense(10, activation='softmax'))
+model.add(tf.keras.layers.Dense(7, activation='softmax'))  # 7 output layers for the features
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['categorical_accuracy', 'accuracy'])
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 model.summary()
 model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)  # train the model
+
+'''
+Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category. 
+We will need to reverse these to the original classes to later convert the predictions to actual classes.
+
+'''
+classes = train_data_gen.class_indices
+inverted_classes = dict({v: k for k, v in classes.items()})
+print(classes)
+
+Y_pred = []
+for i in range(len(test_set)):
+    img = tf.keras.preprocessing.image.load_img(path=test_set.Images[i], target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
+    img = tf.keras.preprocessing.image.img_to_array(img)
+    test_img = img.reshape((1, IMG_HEIGHT, IMG_WIDTH, 3))
+    img_class = model.predict_classes(test_img)
+    prediction = img_class[0]
+    Y_pred.append(prediction)
+
+print(Y_pred)
