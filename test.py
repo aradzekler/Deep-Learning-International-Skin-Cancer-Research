@@ -21,14 +21,20 @@ train_data_dir = "./ISIC2018_Task3_Training_GroundTruth.csv"
 train_data_path = pathlib.Path(train_data_dir)  # turning all / into \ in the path
 image_count = len(list(train_data_path.glob('*.jpg')))
 
-# our predictions will be 0 or 1 from 7 types of skin cancers.
-LABEL_COLUMNS = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
+# GLOBAL PARAMETERS
+LABEL_COLUMNS = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF',
+                 'VASC']  # our predictions will be 0 or 1 from 7 types of skin cancers.
 LABELS = [0, 1]
+BATCH_SIZE = 32
+IMG_HEIGHT = 600
+IMG_WIDTH = 450
+STEPS_PER_EPOCH = np.ceil(image_count / BATCH_SIZE)
 
 # modifying our csv file.
 training_set = pd.read_csv("D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Training_GroundTruth/"
                            "ISIC2018_Task3_Training_GroundTruth.csv")
 training_imgs = ["{}.jpg".format(x) for x in list(training_set.image)]  # adding .jpg to image column
+
 # setting up labels to predict.
 training_labels_MEL = list(training_set['MEL'].astype(int))
 training_labels_NV = list(training_set['NV'].astype(int))
@@ -56,6 +62,7 @@ BKL_str = training_set.BKL.astype(str)
 DF_str = training_set.DF.astype(str)
 VASC_str = training_set.VASC.astype(str)
 
+# our prediction 'string' will contain the label for cancer type, such as 0001000
 training_set['prediction'] = MEL_str + NV_str + BCC_str + AKIEC_str + BKL_str + DF_str + VASC_str
 
 # creating a test csv with test filenames
@@ -71,15 +78,11 @@ with open('D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/test_set.csv'
         data = []
 writeFile.close()
 
+# reading out test csv and images and converting to dataframe.
 test_set = pd.read_csv("D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/test_set.csv")
 test_imgs = ["D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Test_Input/images/{}.jpg".format(x) for x in
-             list(test_set.id)]
+             list(test_set.Images)]
 test_set = pd.DataFrame({'Images': test_imgs})
-
-BATCH_SIZE = 32
-IMG_HEIGHT = 600
-IMG_WIDTH = 450
-STEPS_PER_EPOCH = np.ceil(image_count / BATCH_SIZE)
 
 # The 1./255 is to convert from uint8 to float32 in range [0,1].
 image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1. / 255)
@@ -113,14 +116,10 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 model.summary()
 model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)  # train the model
 
-'''
-Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category. 
-We will need to reverse these to the original classes to later convert the predictions to actual classes.
-
-'''
+# Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
+# We will need to reverse these to the original classes to later convert the predictions to actual classes.
 classes = train_data_gen.class_indices
 inverted_classes = dict({v: k for k, v in classes.items()})
-print(classes)
 
 Y_pred = []
 for i in range(len(test_set)):
@@ -131,4 +130,24 @@ for i in range(len(test_set)):
     prediction = img_class[0]
     Y_pred.append(prediction)
 
-print(Y_pred)
+prediction_classes = [inverted_classes.get(item, item) for item in Y_pred]
+
+# prediction variables for outputting predictions
+MEL = []
+NV = []
+BCC = []
+AKIEC = []
+BKL = []
+DF = []
+VASC = []
+for i in prediction_classes:
+    MEL.append(i[0])
+    NV.append(i[1])
+    BCC.append(i[2])
+    AKIEC.append(i[3])
+    BKL.append(i[4])
+    DF.append(i[5])
+    VASC.append(i[6])
+
+predictions = {'MEL': MEL, 'NV': NV, 'BCC': BCC, 'AKIEC': AKIEC, 'BKL': BKL, 'DF': DF, 'VASC': VASC}
+pd.DataFrame(predictions).to_excel("D:/Users/arad/ISIC2018T3/predictionss.xlsx", index=False)
