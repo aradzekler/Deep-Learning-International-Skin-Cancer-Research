@@ -114,7 +114,7 @@ model.add(tf.keras.layers.Dense(7, activation='softmax'))  # 7 output layers for
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 model.summary()
-model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)  # train the model
+history = model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)  # train the model
 
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
 # We will need to reverse these to the original classes to later convert the predictions to actual classes.
@@ -131,6 +131,15 @@ for i in range(len(test_set)):
     Y_pred.append(prediction)
 
 prediction_classes = [inverted_classes.get(item, item) for item in Y_pred]
+
+# plotting
+plt.plot(history.history['accuracy'], label='accuracy')
+plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.ylim([0.5, 1])
+plt.legend(loc='lower right')
+
 
 # prediction variables for outputting predictions
 MEL = []
