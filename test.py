@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import IPython.display as display
 import pandas as pd
+from math import log
 import numpy as np
 import pathlib
 
@@ -51,6 +52,7 @@ training_set = pd.DataFrame({'Images': training_imgs,
                              'DF': training_labels_DF,
                              'VASC': training_labels_VASC})
 
+# converting to string values in order to concat and create 'class' for cancer type, ie '0100000'
 MEL_str = training_set.MEL.astype(str)
 NV_str = training_set.NV.astype(str)
 BCC_str = training_set.BCC.astype(str)
@@ -58,7 +60,9 @@ AKIEC_str = training_set.AKIEC.astype(str)
 BKL_str = training_set.BKL.astype(str)
 DF_str = training_set.DF.astype(str)
 VASC_str = training_set.VASC.astype(str)
-training_set['prediction'] = "{}{}{}{}{}{}{}".format(MEL_str, NV_str, BCC_str, AKIEC_str, BKL_str, DF_str, VASC_str)
+
+training_set['prediction'] = MEL_str + NV_str + BCC_str + AKIEC_str + BKL_str + DF_str + VASC_str
+
 BATCH_SIZE = 32
 IMG_HEIGHT = 600
 IMG_WIDTH = 450
@@ -67,16 +71,16 @@ STEPS_PER_EPOCH = np.ceil(image_count / BATCH_SIZE)
 # The 1./255 is to convert from uint8 to float32 in range [0,1].
 image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1. / 255)
 train_data_gen = image_generator.flow_from_dataframe(
-                                        dataframe=training_set,
-                                        directory="",
-                                        x_col="Images",
-                                        y_col="prediction",
-                                        class_mode="categorical",
-                                        shuffle=False,
-                                        target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                        batch_size=BATCH_SIZE,
-                                        validate_filenames=False)
-print(train_data_gen.filenames)
+    dataframe=training_set,
+    directory=None,
+    x_col="Images",
+    y_col="prediction",
+    class_mode="categorical",  # 2D numpy array of one-hot encoded labels. supports multi-label output.
+    shuffle=False,
+    target_size=(IMG_HEIGHT, IMG_WIDTH),
+    batch_size=BATCH_SIZE,
+    validate_filenames=False)
+
 '''
 BASIC CNN MODEL
 '''
@@ -87,12 +91,11 @@ model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(tf.keras.layers.MaxPooling2D((2, 2)))
 model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 
-model.add(tf.keras.layers.Flatten())
+model.add(tf.keras.layers.Flatten())  # flatten the output into vector
 model.add(tf.keras.layers.Dense(64, activation='relu'))
 model.add(tf.keras.layers.Dense(10, activation='softmax'))
 
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['categorical_accuracy', 'accuracy'])
-# train the model
-model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)
 
-
+model.summary()
+model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)  # train the model
