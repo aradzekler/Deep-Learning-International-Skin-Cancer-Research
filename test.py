@@ -8,6 +8,10 @@ from math import log
 import numpy as np
 import pathlib
 
+# https://analyticsindiamag.com/multi-label-image-classification-with-tensorflow-keras/
+# https://www.tensorflow.org/tutorials/images/cnn
+#
+
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 '''
@@ -22,7 +26,7 @@ The Functional API a set of tools for building graphs of layers.
 '''
 PREPROCESSING DATA
 '''
-train_data_dir = "D:/Users/arad/ISIC2018T3/db/ISIC2018_Task3_Training_Input/"
+train_data_dir = "./ISIC2018_Task3_Training_GroundTruth.csv"
 train_data_path = pathlib.Path(train_data_dir)  # turning all / into \ in the path
 image_count = len(list(train_data_path.glob('*.jpg')))
 
@@ -31,8 +35,8 @@ LABEL_COLUMNS = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
 LABELS = [0, 1]
 
 # modifying our csv file.
-training_set = pd.read_csv("D:/Users/arad/ISIC2018T3/db/ISIC2018_Task3_Training_GroundTruth/"
-                           "/ISIC2018_Task3_Training_GroundTruth.csv")
+training_set = pd.read_csv("D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Training_GroundTruth/"
+                           "ISIC2018_Task3_Training_GroundTruth.csv")
 training_imgs = ["{}.jpg".format(x) for x in list(training_set.image)]  # adding .jpg to image column
 # setting up labels to predict.
 training_labels_MEL = list(training_set['MEL'].astype(int))
@@ -72,14 +76,14 @@ STEPS_PER_EPOCH = np.ceil(image_count / BATCH_SIZE)
 image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1. / 255)
 train_data_gen = image_generator.flow_from_dataframe(
     dataframe=training_set,
-    directory=None,
+    directory='data/ISIC2018_Task3_Training_Input/images',
     x_col="Images",
     y_col="prediction",
     class_mode="categorical",  # 2D numpy array of one-hot encoded labels. supports multi-label output.
     shuffle=False,
     target_size=(IMG_HEIGHT, IMG_WIDTH),
     batch_size=BATCH_SIZE,
-    validate_filenames=False)
+    validate_filenames=True)
 
 '''
 BASIC CNN MODEL
