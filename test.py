@@ -28,7 +28,7 @@ LABELS = [0, 1]
 BATCH_SIZE = 32
 IMG_HEIGHT = 600
 IMG_WIDTH = 450
-STEPS_PER_EPOCH = np.ceil(image_count / BATCH_SIZE)
+
 
 # modifying our csv file.
 training_set = pd.read_csv("D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Training_GroundTruth/"
@@ -114,7 +114,7 @@ model.add(tf.keras.layers.Dense(7, activation='softmax'))  # 7 output layers for
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 model.summary()
-history = model.fit_generator(train_data_gen, epochs=50, steps_per_epoch=60)  # train the model
+history = model.fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
 
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
 # We will need to reverse these to the original classes to later convert the predictions to actual classes.
