@@ -109,7 +109,8 @@ model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 
 model.add(tf.keras.layers.Flatten())  # flatten the output into vector
 model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dense(7, activation='softmax'))  # 7 output layers for the features
+model.add(tf.keras.layers.Dense(7, activation='sigmoid'))  # 7 output layers for the features
+# softmax is better for single label prediction, sigmoid is the way to go with multi-label prediction
 
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
@@ -123,7 +124,7 @@ inverted_classes = dict({v: k for k, v in classes.items()})
 
 Y_pred = []
 for i in range(len(test_set)):
-    img = tf.keras.preprocessing.image.load_img(path=test_set.Images[i], target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
+    img = tf.keras.preprocessing.image.load_img(path=test_set.Images[i].replace('.jpg', ''), target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
     img = tf.keras.preprocessing.image.img_to_array(img)
     test_img = img.reshape((1, IMG_HEIGHT, IMG_WIDTH, 3))
     img_class = model.predict_classes(test_img)
@@ -134,7 +135,7 @@ prediction_classes = [inverted_classes.get(item, item) for item in Y_pred]
 
 # plotting
 plt.plot(history.history['accuracy'], label='accuracy')
-plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+plt.plot(history.history['val_accuracy'], label='val_accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.ylim([0.5, 1])
