@@ -5,8 +5,9 @@ import IPython.display as display
 import pandas as pd
 from math import log
 import csv
-import numpy as np
 import pathlib
+import blocks
+import os
 
 # https://analyticsindiamag.com/multi-label-image-classification-with-tensorflow-keras/
 # https://www.tensorflow.org/tutorials/images/cnn
@@ -96,10 +97,6 @@ train_data_gen = image_generator.flow_from_dataframe(
     batch_size=BATCH_SIZE,
     validate_filenames=True)
 
-'''
-BASIC CNN MODEL
-'''
-
 
 def basic_CNN_model():
     _model = tf.keras.models.Sequential()  # creating a sequential model for our CNN
@@ -127,7 +124,7 @@ def smallerVGGNET_model(num_classes):
     _model.add(  # padding = "same" results in padding the input such that the output has the same length
         tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
     _model.add(tf.keras.layers.BatchNormalization(axis=-1))
-    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+    _model.add(tf.keras.layers.MaxPooling2D((2, 2)))
     _model.add(tf.keras.layers.Dropout(0.25))
 
     # (CONV => RELU) * 2 => POOL
@@ -153,15 +150,21 @@ def smallerVGGNET_model(num_classes):
     _model.add(tf.keras.layers.Dropout(0.5))
 
     # softmax classifier
-    _model.add(tf.keras.layers.Dense(num_classes))  # 7 features
-    _model.add(tf.keras.layers.Activation("softmax"))
+    _model.add(tf.keras.layers.Dense(num_classes, activation="softmax"))  # 7 features
     _model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     _model.summary()
     # return the constructed network architecture
     return _model
 
 
+# model.build(input_shape=(None, IMG_HEIGHT, IMG_WIDTH, 3))
+
+# model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+
 model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
+# model = res_net().fit_generator(train_data_gen, epochs=30, steps_per_epoch=30)
+
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
 # We will need to reverse these to the original classes to later convert the predictions to actual classes.
 classes = train_data_gen.class_indices
@@ -175,19 +178,23 @@ for i in range(len(test_set)):
     img = tf.keras.preprocessing.image.load_img(path=path, target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
     img = tf.keras.preprocessing.image.img_to_array(img)
     test_img = img.reshape((1, IMG_HEIGHT, IMG_WIDTH, 3))
-    img_class = model.predict_classes(test_img)
+    img_class = model.predict(test_img)  # prediction with resnet because model isnot in tf
+    # img_class = model.predict_classes(test_img)
     prediction = img_class[0]
     Y_pred.append(prediction)
 
 prediction_classes = [inverted_classes.get(item, item) for item in Y_pred]
 
 # plotting
-plt.plot(model.history['accuracy'], label='accuracy')
-plt.plot(model.history['val_accuracy'], label='val_accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.ylim([0.5, 1])
-plt.legend(loc='lower right')
+
+plt.plot(model.history["loss"], label="train_loss")
+plt.plot(model.history["val_loss"], label="val_loss")
+plt.plot(model.history["acc"], label="train_acc")
+plt.plot(model.history["val_acc"], label="val_acc")
+plt.title("Training Loss and Accuracy")
+plt.xlabel("Epoch #")
+plt.ylabel("Loss/Accuracy")
+plt.legend(loc="upper left")
 
 # prediction variables for outputting predictions
 MEL = []
