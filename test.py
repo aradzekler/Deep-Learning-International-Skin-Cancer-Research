@@ -29,7 +29,6 @@ BATCH_SIZE = 32
 IMG_HEIGHT = 600
 IMG_WIDTH = 450
 
-
 # modifying our csv file.
 training_set = pd.read_csv("D:/Users/arad/ISIC2018T3/data/ISIC2018_Task3_Training_GroundTruth/"
                            "ISIC2018_Task3_Training_GroundTruth.csv")
@@ -100,23 +99,69 @@ train_data_gen = image_generator.flow_from_dataframe(
 '''
 BASIC CNN MODEL
 '''
-model = tf.keras.models.Sequential()  # creating a sequential model for our CNN
-model.add(tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
-model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
-model.add(tf.keras.layers.MaxPooling2D((2, 2)))
-model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 
-model.add(tf.keras.layers.Flatten())  # flatten the output into vector
-model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dense(7, activation='sigmoid'))  # 7 output layers for the features
-# softmax is better for single label prediction, sigmoid is the way to go with multi-label prediction
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+def basic_CNN_model():
+    _model = tf.keras.models.Sequential()  # creating a sequential model for our CNN
+    _model.add(tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
+    _model.add(tf.keras.layers.MaxPooling2D((2, 2)))
+    _model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    _model.add(tf.keras.layers.MaxPooling2D((2, 2)))
+    _model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 
-model.summary()
-history = model.fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
+    _model.add(tf.keras.layers.Flatten())  # flatten the output into vector
+    _model.add(tf.keras.layers.Dense(64, activation='relu'))
+    _model.add(tf.keras.layers.Dense(7, activation='sigmoid'))  # 7 output layers for the features
+    # softmax is better for single label prediction, sigmoid is the way to go with multi-label prediction
+    _model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    _model.summary()
+    return _model
 
+
+# history = basic_CNN_model().fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
+
+
+def smallerVGGNET_model(num_classes):
+    _model = tf.keras.models.Sequential()
+    # CONV => RELU => POOL
+    _model.add(  # padding = "same" results in padding the input such that the output has the same length
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
+    _model.add(tf.keras.layers.BatchNormalization(axis=-1))
+    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+    _model.add(tf.keras.layers.Dropout(0.25))
+
+    # (CONV => RELU) * 2 => POOL
+    _model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding="same"))
+    _model.add(tf.keras.layers.BatchNormalization(axis=-1))
+    _model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding="same"))
+    _model.add(tf.keras.layers.BatchNormalization(axis=-1))
+    _model.add(tf.keras.layers.MaxPooling2D((2, 2)))
+    _model.add(tf.keras.layers.Dropout(0.25))
+
+    # (CONV => RELU) * 2 => POOL
+    _model.add(tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding="same"))
+    _model.add(tf.keras.layers.BatchNormalization(axis=-1))
+    _model.add(tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding="same"))
+    _model.add(tf.keras.layers.BatchNormalization(axis=-1))
+    _model.add(tf.keras.layers.MaxPooling2D((2, 2)))
+    _model.add(tf.keras.layers.Dropout(0.25))
+
+    # first (and only) set of FC => RELU layers
+    _model.add(tf.keras.layers.Flatten())
+    _model.add(tf.keras.layers.Dense(1024, activation='relu'))
+    _model.add(tf.keras.layers.BatchNormalization())
+    _model.add(tf.keras.layers.Dropout(0.5))
+
+    # softmax classifier
+    _model.add(tf.keras.layers.Dense(num_classes))  # 7 features
+    _model.add(tf.keras.layers.Activation("softmax"))
+    _model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    _model.summary()
+    # return the constructed network architecture
+    return _model
+
+
+model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
 # We will need to reverse these to the original classes to later convert the predictions to actual classes.
 classes = train_data_gen.class_indices
@@ -124,7 +169,10 @@ inverted_classes = dict({v: k for k, v in classes.items()})
 
 Y_pred = []
 for i in range(len(test_set)):
-    img = tf.keras.preprocessing.image.load_img(path=test_set.Images[i].replace('.jpg', ''), target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
+    path = test_set.Images[i]
+    if path.endswith('.jpg'):  # trimming double .jpg from end of file
+        path = path[:-4]
+    img = tf.keras.preprocessing.image.load_img(path=path, target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
     img = tf.keras.preprocessing.image.img_to_array(img)
     test_img = img.reshape((1, IMG_HEIGHT, IMG_WIDTH, 3))
     img_class = model.predict_classes(test_img)
@@ -134,13 +182,12 @@ for i in range(len(test_set)):
 prediction_classes = [inverted_classes.get(item, item) for item in Y_pred]
 
 # plotting
-plt.plot(history.history['accuracy'], label='accuracy')
-plt.plot(history.history['val_accuracy'], label='val_accuracy')
+plt.plot(model.history['accuracy'], label='accuracy')
+plt.plot(model.history['val_accuracy'], label='val_accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.ylim([0.5, 1])
 plt.legend(loc='lower right')
-
 
 # prediction variables for outputting predictions
 MEL = []
