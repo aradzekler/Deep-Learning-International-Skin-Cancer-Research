@@ -1,12 +1,8 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import os
-import IPython.display as display
 import pandas as pd
-from math import log
 import csv
 import pathlib
-import blocks
 import os
 
 # https://analyticsindiamag.com/multi-label-image-classification-with-tensorflow-keras/
@@ -25,7 +21,6 @@ image_count = len(list(train_data_path.glob('*.jpg')))
 # GLOBAL PARAMETERS
 LABEL_COLUMNS = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF',
                  'VASC']  # our predictions will be 0 or 1 from 7 types of skin cancers.
-LABELS = [0, 1]
 BATCH_SIZE = 32
 IMG_HEIGHT = 600
 IMG_WIDTH = 450
