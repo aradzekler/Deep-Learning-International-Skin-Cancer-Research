@@ -110,7 +110,6 @@ def basic_CNN_model():
     return _model
 
 
-model = basic_CNN_model().fit_generator(train_data_gen, epochs=2, steps_per_epoch=60)  # train the model
 
 
 def smallerVGGNET_model(num_classes):
@@ -159,6 +158,10 @@ def smallerVGGNET_model(num_classes):
 
 #model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
 # model = res_net().fit_generator(train_data_gen, epochs=30, steps_per_epoch=30)
+
+model = basic_CNN_model()
+model.fit_generator(train_data_gen, epochs=10, steps_per_epoch=30)  # train the model
+print('FINISHED')
 
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
 # We will need to reverse these to the original classes to later convert the predictions to actual classes.
