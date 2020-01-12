@@ -110,7 +110,7 @@ def basic_CNN_model():
     return _model
 
 
-model = basic_CNN_model().fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
+model = basic_CNN_model().fit_generator(train_data_gen, epochs=2, steps_per_epoch=60)  # train the model
 
 
 def smallerVGGNET_model(num_classes):
@@ -152,9 +152,9 @@ def smallerVGGNET_model(num_classes):
     return _model
 
 
-model.build(input_shape=(None, IMG_HEIGHT, IMG_WIDTH, 3))
+#model.build(input_shape=(None, IMG_HEIGHT, IMG_WIDTH, 3))
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+#model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 
 #model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
