@@ -20,7 +20,7 @@ image_count = len(list(train_data_path.glob('*.jpg')))
 
 # GLOBAL PARAMETERS
 LABEL_COLUMNS = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF',
-                 'VASC']  # our predictions will be 0 or 1 from 7 types of skin cancers.
+                 'VASC']  # our predictions will be 0 or 1 for 7 types of skin cancers.
 BATCH_SIZE = 32
 IMG_HEIGHT = 600
 IMG_WIDTH = 450
@@ -110,7 +110,7 @@ def basic_CNN_model():
     return _model
 
 
-# history = basic_CNN_model().fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
+model = basic_CNN_model().fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
 
 
 def smallerVGGNET_model(num_classes):
@@ -152,12 +152,12 @@ def smallerVGGNET_model(num_classes):
     return _model
 
 
-# model.build(input_shape=(None, IMG_HEIGHT, IMG_WIDTH, 3))
+model.build(input_shape=(None, IMG_HEIGHT, IMG_WIDTH, 3))
 
-# model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 
-model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
+#model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
 # model = res_net().fit_generator(train_data_gen, epochs=30, steps_per_epoch=30)
 
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
@@ -173,8 +173,8 @@ for i in range(len(test_set)):
     img = tf.keras.preprocessing.image.load_img(path=path, target_size=(IMG_HEIGHT, IMG_WIDTH, 3))
     img = tf.keras.preprocessing.image.img_to_array(img)
     test_img = img.reshape((1, IMG_HEIGHT, IMG_WIDTH, 3))
-    img_class = model.predict(test_img)  # prediction with resnet because model isnot in tf
-    # img_class = model.predict_classes(test_img)
+    #img_class = model.predict(test_img)  # prediction with resnet because model isnot in tf
+    img_class = model.predict_classes(test_img)
     prediction = img_class[0]
     Y_pred.append(prediction)
 
