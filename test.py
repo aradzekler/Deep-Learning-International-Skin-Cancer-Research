@@ -103,37 +103,10 @@ def basic_CNN_model():
 
     _model.add(tf.keras.layers.Flatten())  # flatten the output into vector
     _model.add(tf.keras.layers.Dense(64, activation='relu'))
-    _model.add(tf.keras.layers.Dense(7, activation='sigmoid'))  # 7 output layers for the features
+    _model.add(tf.keras.layers.Dense(7, activation='softmax'))  # 7 output layers for the features
     # softmax is better for single label prediction, sigmoid is the way to go with multi-label prediction
     _model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     _model.summary()
-    return _model
-
-
-def alexNet_model():
-    _model = tf.keras.models.Sequential()
-    _model.add(tf.keras.layers.Conv2D(96, (11, 11), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
-    _model.add(tf.keras.layers.LayerNormalization())
-    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
-    _model.add(tf.keras.layers.Conv2D(256, (5, 5), activation='relu'))
-    _model.add(tf.keras.layers.LayerNormalization())
-    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
-    _model.add(tf.keras.layers.Conv2D(384, (3, 3), activation='relu'))
-    _model.add(tf.keras.layers.Conv2D(256, (5, 5), activation='relu'))
-    _model.add(tf.keras.layers.Conv2D(256, (3, 3), activation='relu'))
-    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
-
-    _model.add(tf.keras.layers.Flatten())
-    _model.add(tf.keras.layers.Dense(4096, activation='relu'))
-    _model.add(tf.keras.layers.Dropout(0.25))
-    _model.add(tf.keras.layers.Dense(1024, activation='relu'))
-    _model.add(tf.keras.layers.Dropout(0.5))
-
-    # softmax classifier
-    _model.add(tf.keras.layers.Dense(7, activation="softmax"))  # 7 features
-    _model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    _model.summary()
-    # return the constructed network architecture
     return _model
 
 
@@ -184,8 +157,8 @@ def smallerVGGNET_model():
 # model = smallerVGGNET_model(7).fit_generator(train_data_gen, epochs=30, steps_per_epoch=60)  # train the model
 # model = res_net().fit_generator(train_data_gen, epochs=30, steps_per_epoch=30)
 
-model = basic_CNN_model()
-history = model.fit_generator(train_data_gen, epochs=1, steps_per_epoch=1)  # train the model
+model = smallerVGGNET_model()
+history = model.fit_generator(train_data_gen, epochs=15, steps_per_epoch=10)  # train the model
 print('FINISHED')
 
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
