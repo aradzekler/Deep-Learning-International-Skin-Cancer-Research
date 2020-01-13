@@ -160,7 +160,7 @@ def smallerVGGNET_model(num_classes):
 # model = res_net().fit_generator(train_data_gen, epochs=30, steps_per_epoch=30)
 
 model = basic_CNN_model()
-model.fit_generator(train_data_gen, epochs=10, steps_per_epoch=30)  # train the model
+history = model.fit_generator(train_data_gen, epochs=1, steps_per_epoch=1)  # train the model
 print('FINISHED')
 
 # Our model will be predicting the labels in the range 0 to 6 based on the above dictionary for each category.
@@ -183,16 +183,6 @@ for i in range(len(test_set)):
 
 prediction_classes = [inverted_classes.get(item, item) for item in Y_pred]
 
-# plotting
-
-plt.plot(model.history["loss"], label="train_loss")
-plt.plot(model.history["val_loss"], label="val_loss")
-plt.plot(model.history["acc"], label="train_acc")
-plt.plot(model.history["val_acc"], label="val_acc")
-plt.title("Training Loss and Accuracy")
-plt.xlabel("Epoch #")
-plt.ylabel("Loss/Accuracy")
-plt.legend(loc="upper left")
 
 # prediction variables for outputting predictions
 MEL = []
@@ -213,3 +203,26 @@ for i in prediction_classes:
 
 predictions = {'MEL': MEL, 'NV': NV, 'BCC': BCC, 'AKIEC': AKIEC, 'BKL': BKL, 'DF': DF, 'VASC': VASC}
 pd.DataFrame(predictions).to_excel("D:/Users/arad/ISIC2018T3/predictionss.xlsx", index=False)
+
+history_dict = history.history
+
+acc = history_dict['accuracy']
+#val_acc = history_dict['val_acc']
+loss = history_dict['loss']
+#val_loss = history_dict['val_loss']
+print(history_dict.keys())
+# plotting
+'''
+plt.plot(history.history["loss"], label="train_loss")
+plt.plot(history.history["val_loss"], label="val_loss")
+plt.plot(history.history["acc"], label="train_acc")
+plt.plot(history.history["val_acc"], label="val_acc")
+'''
+print("PLOTTING")
+plt.plot(acc, label="train_acc")
+plt.plot(loss, label="train_loss")
+plt.title("Training Loss and Accuracy")
+plt.xlabel("Epoch #")
+plt.ylabel("Loss/Accuracy")
+plt.legend(loc="upper left")
+plt.show()
