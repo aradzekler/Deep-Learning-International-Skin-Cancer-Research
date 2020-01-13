@@ -110,6 +110,33 @@ def basic_CNN_model():
     return _model
 
 
+def alexNet_model():
+    _model = tf.keras.models.Sequential()
+    _model.add(tf.keras.layers.Conv2D(96, (11, 11), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
+    _model.add(tf.keras.layers.LayerNormalization())
+    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+    _model.add(tf.keras.layers.Conv2D(256, (5, 5), activation='relu'))
+    _model.add(tf.keras.layers.LayerNormalization())
+    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+    _model.add(tf.keras.layers.Conv2D(384, (3, 3), activation='relu'))
+    _model.add(tf.keras.layers.Conv2D(256, (5, 5), activation='relu'))
+    _model.add(tf.keras.layers.Conv2D(256, (3, 3), activation='relu'))
+    _model.add(tf.keras.layers.MaxPooling2D((3, 3)))
+
+    _model.add(tf.keras.layers.Flatten())
+    _model.add(tf.keras.layers.Dense(4096, activation='relu'))
+    _model.add(tf.keras.layers.Dropout(0.25))
+    _model.add(tf.keras.layers.Dense(1024, activation='relu'))
+    _model.add(tf.keras.layers.Dropout(0.5))
+
+    # softmax classifier
+    _model.add(tf.keras.layers.Dense(7, activation="softmax"))  # 7 features
+    _model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    _model.summary()
+    # return the constructed network architecture
+    return _model
+
+
 def smallerVGGNET_model():
     _model = tf.keras.models.Sequential()
     # CONV => RELU => POOL
