@@ -48,7 +48,7 @@ training_set = pd.DataFrame({'Images': training_imgs,
                              'DF': training_labels_DF,
                              'VASC': training_labels_VASC})
 
-# converting to string values in order to concat and create 'class' for cancer type, ie '0100000'
+# converting to string values in order to concat and create 'class' for cancer type, ie '0100000' - 1HOTENCODING
 MEL_str = training_set.MEL.astype(str)
 NV_str = training_set.NV.astype(str)
 BCC_str = training_set.BCC.astype(str)
